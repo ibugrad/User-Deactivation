@@ -11,7 +11,7 @@ public class userDeactivation implements database.Batchable<sObject> , database.
         'Security User', 
         'Platform Integration User',
         'Integration User',
-        'DreamIt Academy'};
+        'You can add more!'};
     
     public database.QueryLocator start(database.BatchableContext bc){
      return database.getQueryLocator( [ Select id,Name,FirstName,LastName,isactive,LastLogindate from User 
