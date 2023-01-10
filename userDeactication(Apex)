@@ -1,0 +1,55 @@
+public class userDeactivation implements database.Batchable<sObject> , database.stateful {
+
+    //string sysAdminMail= [select id,name,email from user where profile.name = 'System Administrator' limit 1 ].email;
+    list <user> sysAdmins = [select id,name,email from user where profile.name = 'System Administrator' ];
+    list <string> usrNames = new list <string>();
+ 	integer deactivatedusers = 0; //400
+    Deactivate_Time__mdt deact = [Select Deactivate_Day__c from Deactivate_Time__mdt];
+    datetime logindate = datetime.now() - deact.Deactivate_Day__c;
+    list <string> sysUsers = new list <string>{'Automated Process' , 
+        'Data.com Clean' , 
+        'Security User', 
+        'Platform Integration User',
+        'Integration User',
+        'DreamIt Academy'};
+    
+    public database.QueryLocator start(database.BatchableContext bc){
+     return database.getQueryLocator( [ Select id,Name,FirstName,LastName,isactive,LastLogindate from User 
+                                      			 Where isactive = true 
+                                     			 And Name Not IN:sysUsers
+                                      			 And ( LastLogindate <=  :logindate    
+     											 OR (LastLogindate = null And createdDate <=  :logindate)) ] );    
+    } 
+    
+    public void execute (database.BatchableContext bc , list<User> usrList ){  
+        if(usrList.size() > 0 ){
+            for(User usr:usrList){ 
+                usr.isactive = false;
+                deactivatedusers++;
+                 //Deaktif edilen userların isim soyisimleri list aldık
+                usrNames.add(usr.Name + ' ' + usr.LastName);
+            }
+         //   update usrlist;
+        database.update(usrList , false);  //partial update, All or Nothing  
+        }
+       }
+    
+    public void finish(database.BatchableContext bc){
+       list<string> emails = new list <string>();
+        for(user usr:sysAdmins){
+            emails.add(usr.email);
+        }        
+        
+Messaging.SingleEmailMessage message = new Messaging.SingleEmailMessage();
+message.toAddresses = emails;
+message.optOutPolicy = 'FILTER';
+message.subject = 'Deactivation Information';
+message.plainTextBody = 'Hello'  + '\n' + 
+            'The users below has been deactivated;' + '\n' +
+            usrNames + '\n' +  
+            'The Number of users has been deactivated = ' + deactivatedusers ;
+Messaging.SingleEmailMessage[] messages = new List<Messaging.SingleEmailMessage> {message};
+Messaging.SendEmailResult[] results = Messaging.sendEmail(messages);
+        
+   }   
+}
