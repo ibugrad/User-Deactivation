@@ -1,4 +1,4 @@
-public class userdeactivationschedule implements schedulable {
+rpublic class userdeactivationschedule implements schedulable {
     public void execute (schedulablecontext sc){
     userDeactivation ex = new userDeactivation();
     database.executeBatch(ex);
