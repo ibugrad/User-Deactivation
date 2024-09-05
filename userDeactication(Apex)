@@ -1,4 +1,4 @@
-1public class userDeactivation implements database.Batchable<sObject> , database.stateful {
+public class userDeactivation implements database.Batchable<sObject> , database.stateful {
 
     //string sysAdminMail= [select id,name,email from user where profile.name = 'System Administrator' limit 1 ].email;
     list <user> sysAdmins = [select id,name,email from user where profile.name = 'System Administrator' ];
